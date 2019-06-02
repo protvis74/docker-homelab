@@ -1,0 +1,40 @@
+version: '3.7'
+
+services:
+  pihole:
+      restart: unless-stopped
+      container_name: pihole
+      image: pihole/pihole:latest
+      dns: 127.0.0.1
+      hostname: pihole
+      volumes:
+        - /var/pihole:/etc/pihole
+      environment:
+        - TZ= "Europe/Berlin"
+        - ServerIP=192.168.0.10
+        - WEBPASSWORD= # Setze hier ein starkes Passwort
+        - DNS1=172.18.0.x:53 #interne IP Docker-Netz -> Bind Server
+        - DNS2=
+        - VIRTUAL_HOST=pihole
+      cap_add:
+        - NET_ADMIN
+      ports:
+        - "53:53/tcp"
+        - "53:53/udp"
+        - "67:67/udp"
+        - "80:80/tcp"
+        - "443:443/tcp"
+
+  bind:
+    restart: unless-stopped
+    container_name: rpi-bind9-svr
+    image: sameersbn/bind:latest
+    environment:
+      - ROOT_PASSWORD=# Setze hier ein starkes Passwort
+     # - WEBMIN_ENABLED=false # GUI abschalten (Sicherheit!) nachdem Bind konfiguriert ist.
+    ports:
+     - 192.168.0.10:10000:10000/tcp
+     - 192.168.0.10:10053:53/tcp # Port auf 10053 gemappt, da 53 schon von Pihole verwendet wird.
+     - 192.168.0.10:10053:53/udp
+    volumes:
+      - /srv/docker/bind:/data
